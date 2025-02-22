@@ -13,8 +13,11 @@ import { pgEnum } from "drizzle-orm/pg-core"
 
 export const categoryEnum = pgEnum("category", [
   "food",
-  "transport",
-  "lodging",
+  "transportation",
+  "entertainment",
+  "shopping",
+  "utilities",
+  "healthcare",
   "other"
 ])
 

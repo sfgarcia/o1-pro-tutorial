@@ -20,11 +20,10 @@ import {
   text,
   timestamp,
   uuid,
-  decimal,
   boolean,
   numeric
 } from "drizzle-orm/pg-core"
-import { categoryEnum } from "@/db/schema"
+import { categoryEnum } from "./categories-schema"
 
 export const receiptsTable = pgTable("receipts", {
   id: uuid("id").defaultRandom().primaryKey(),

@@ -35,8 +35,8 @@ import {
 } from "@/types/table-types"
 import { SelectReceipt } from "@/db/schema/receipts-schema"
 import { EditableCell } from "./editable-cell"
-import { UpdateReceiptFn } from "@/types/receipt-types"
-import { ArrowUpDown, ChevronDown, Loader2 } from "lucide-react"
+import { ArrowUpDown, Loader2 } from "lucide-react"
+import { updateReceiptAction } from "@/db/actions/receipts-actions"
 
 const columnHelper = createColumnHelper<SelectReceipt>()
 
@@ -83,21 +83,16 @@ const defaultColumns: ReceiptTableColumn[] = [
 
 interface ReceiptTableProps {
   data: SelectReceipt[]
-  onUpdate: UpdateReceiptFn
   isLoading?: boolean
 }
 
-export function ReceiptTable({ data, onUpdate, isLoading }: ReceiptTableProps) {
+export function ReceiptTable({ data, isLoading }: ReceiptTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [updatedIds, setUpdatedIds] = useState<Set<string>>(new Set())
 
-  const handleUpdate = async (
-    id: string,
-    accessor: keyof SelectReceipt,
-    value: any
-  ) => {
+  const handleUpdate = async (id: string, data: Partial<SelectReceipt>) => {
     setUpdatedIds(prev => new Set(prev.add(id)))
-    await onUpdate(id, { [accessor]: value })
+    await updateReceiptAction(id, data)
     setUpdatedIds(prev => {
       prev.delete(id)
       return new Set(prev)
@@ -127,7 +122,7 @@ export function ReceiptTable({ data, onUpdate, isLoading }: ReceiptTableProps) {
             <EditableCell
               value={value}
               onSave={newValue =>
-                handleUpdate(row.original.id, col.accessor, newValue)
+                handleUpdate(row.original.id, { [col.accessor]: newValue })
               }
               validation={col.validation}
               type={

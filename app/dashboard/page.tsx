@@ -48,10 +48,5 @@ async function ChartSection({ userId }: { userId: string }) {
 async function ReceiptTableSection({ userId }: { userId: string }) {
   const { data: receipts } = await getReceiptsAction(userId)
 
-  const handleUpdate: UpdateReceiptFn = async (id, data) => {
-    "use server"
-    return updateReceiptAction(id, data)
-  }
-
-  return <ReceiptTable data={receipts || []} onUpdate={handleUpdate} />
+  return <ReceiptTable data={receipts || []} />
 }
