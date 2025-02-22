@@ -1,26 +1,13 @@
+// app/upload/page.tsx
 "use server"
 
+import { UploadDropzone } from "./_components/upload-dropzone"
 import { auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
-import { UploadDropzone } from "./upload-dropzone"
 
-/**
- * @description
- * Server component for the receipt upload page. Handles:
- * - User authentication check
- * - Page layout and structure
- * - Integration of upload dropzone component
- *
- * Security:
- * - Automatically redirects unauthenticated users to sign-in
- * - Only renders upload interface for authenticated users
- */
 export default async function UploadPage() {
   const { userId } = await auth()
-
-  if (!userId) {
-    redirect("/sign-in")
-  }
+  if (!userId) redirect("/sign-in")
 
   return (
     <div className="container max-w-2xl py-8">

@@ -24,7 +24,11 @@ const navLinks = [
   { href: "/contact", label: "Contact" }
 ]
 
-const signedInLinks = [{ href: "/dashboard", label: "Dashboard" }]
+// components/landing/header.tsx
+const signedInLinks = [
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/upload", label: "Upload" }
+]
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
