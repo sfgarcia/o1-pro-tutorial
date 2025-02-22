@@ -6,7 +6,6 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { Button } from "@/components/ui/button"
 import { Loader2, UploadCloud } from "lucide-react"
 import { validateFile } from "@/lib/file-validation"
-import type { ActionState } from "@/types"
 
 export function UploadDropzone() {
   const { userId } = useAuth()
@@ -60,9 +59,20 @@ export function UploadDropzone() {
         window.location.href = `/receipts/${receiptId}`
       } catch (error) {
         console.error("Upload error:", error)
-        setUploadError(
-          error instanceof Error ? error.message : "File upload failed"
-        )
+        let errorMessage = "File upload failed"
+
+        if (error instanceof Error) {
+          errorMessage = error.message
+        } else if (typeof error === "object" && error !== null) {
+          // Handle Supabase errors
+          if ("message" in error) {
+            errorMessage = error.message as string
+          } else if ("error" in error) {
+            errorMessage = error.error as string
+          }
+        }
+
+        setUploadError(errorMessage)
       } finally {
         setIsUploading(false)
       }
