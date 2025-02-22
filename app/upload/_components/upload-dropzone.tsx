@@ -1,33 +1,13 @@
 "use client"
-
 import { useCallback, useState } from "react"
 import { useDropzone } from "react-dropzone"
 import { useAuth } from "@clerk/nextjs"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { Button } from "@/components/ui/button"
 import { Loader2, UploadCloud } from "lucide-react"
-import { validateFile } from "../../../lib/file-validation"
+import { validateFile } from "@/lib/file-validation"
 import type { ActionState } from "@/types"
 
-/**
- * @description
- * Client component for drag-and-drop receipt upload with integrated validation and processing.
- * Handles the complete upload flow:
- * 1. Client-side file validation
- * 2. Supabase storage upload to 'pending' bucket
- * 3. Triggers server-side processing via form submission
- *
- * Key features:
- * - Drag-and-drop UI with visual feedback
- * - File type/size validation before upload
- * - Loading states during processing
- * - Error handling with user feedback
- *
- * @dependencies
- * - react-dropzone: Handles drag-and-drop functionality
- * - @clerk/nextjs: For user authentication
- * - @supabase/auth-helpers-nextjs: Client-side Supabase operations
- */
 export function UploadDropzone() {
   const { userId } = useAuth()
   const [isUploading, setIsUploading] = useState(false)
@@ -37,14 +17,13 @@ export function UploadDropzone() {
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (!userId) {
-        setUploadError("User not authenticated")
+        setUploadError("Please sign in to upload receipts")
         return
       }
 
       const file = acceptedFiles[0]
       if (!file) return
 
-      // Client-side validation
       const validation = validateFile(file)
       if (!validation.isValid) {
         setUploadError(validation.error || "Invalid file")
@@ -55,13 +34,11 @@ export function UploadDropzone() {
       setUploadError(null)
 
       try {
-        // Generate unique file path
         const timestamp = Date.now()
         const fileExtension = file.name.split(".").pop()
         const fileName = `${timestamp}.${fileExtension}`
         const filePath = `pending/${userId}/${fileName}`
 
-        // Upload to Supabase storage
         const { error } = await supabase.storage
           .from("receipts")
           .upload(filePath, file, {
@@ -71,16 +48,16 @@ export function UploadDropzone() {
 
         if (error) throw error
 
-        // Trigger processing
         const response = await fetch("/api/process-receipt", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ filePath, userId })
         })
 
-        if (!response.ok) {
-          throw new Error("Failed to start processing")
-        }
+        if (!response.ok) throw new Error("Processing failed")
+
+        const { receiptId } = await response.json()
+        window.location.href = `/receipts/${receiptId}`
       } catch (error) {
         console.error("Upload error:", error)
         setUploadError(
@@ -101,38 +78,48 @@ export function UploadDropzone() {
   })
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto max-w-2xl space-y-6">
       <div
         {...getRootProps()}
-        className={`cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors
-          ${isDragActive ? "border-primary bg-muted" : "border-muted-foreground/50"}
-          ${isUploading ? "cursor-wait opacity-50" : ""}`}
+        className={`rounded-lg border-2 border-dashed p-8 text-center transition-colors
+          ${isDragActive ? "border-primary bg-primary/10" : "border-muted-foreground/30"}
+          ${isUploading ? "cursor-wait opacity-50" : "cursor-pointer"}`}
       >
         <input {...getInputProps()} />
+
         <div className="flex flex-col items-center justify-center gap-4">
           {isUploading ? (
-            <Loader2 className="text-muted-foreground size-12 animate-spin" />
+            <Loader2 className="text-primary size-12 animate-spin" />
           ) : (
-            <UploadCloud className="text-muted-foreground size-12" />
+            <div className="bg-primary/10 rounded-full p-4">
+              <UploadCloud className="text-primary size-12" />
+            </div>
           )}
-          <div>
-            <p className="font-medium">
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold">
+              {isUploading ? "Processing Receipt..." : "Upload Receipt"}
+            </h2>
+            <p className="text-muted-foreground">
               {isDragActive
-                ? "Drop receipt here"
-                : "Drag & drop receipt or click to browse"}
-            </p>
-            <p className="text-muted-foreground mt-2 text-sm">
-              Supported formats: JPG, PNG (max 10MB)
+                ? "Drop your receipt here"
+                : "Drag & drop or click to browse"}
             </p>
           </div>
-          <Button variant="outline" disabled={isUploading} type="button">
-            Select File
+
+          <Button size="lg" className="gap-2" disabled={isUploading}>
+            <UploadCloud className="size-4" />
+            Choose File
           </Button>
+
+          <p className="text-muted-foreground text-sm">
+            Supported formats: JPG, PNG (max 10MB)
+          </p>
         </div>
       </div>
 
       {uploadError && (
-        <p className="text-destructive text-center text-sm">{uploadError}</p>
+        <p className="text-destructive text-center">{uploadError}</p>
       )}
     </div>
   )
