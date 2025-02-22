@@ -1,0 +1,25 @@
+ANALYZE RECEIPT IMAGE AND RETURN JSON WITH THESE REQUIREMENTS:
+
+1. Structure:
+{
+  "date": "YYYY-MM-DD", 
+  "merchant": "Business name in title case",
+  "amount": float,
+  "items": [
+    {"name": "Item name", "price": float},
+    ...
+  ],
+  "category": "food|transport|lodging|other"
+}
+
+2. Date: Use receipt date if present, otherwise today's date
+3. Merchant: Extract exact business name from receipt header
+4. Amount: Total amount including taxes
+5. Items: List all line items with prices
+6. Category: Choose most appropriate from:
+   - food: Restaurants, groceries
+   - transport: Fuel, rideshares, public transit
+   - lodging: Hotels, rentals
+   - other: Everything else
+
+BE PRECISE WITH NUMERICAL VALUES. IF ANY FIELD IS UNCLEAR, RETURN NULL FOR THAT FIELD.
