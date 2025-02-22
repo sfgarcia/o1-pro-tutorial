@@ -13,6 +13,7 @@ Dependencies:
 */
 
 import { SelectReceipt } from "@/db/schema/receipts-schema"
+import type { ActionState } from "@/types"
 
 export interface ReceiptWithStatus extends SelectReceipt {
   validationStatus: "valid" | "needs_review" | "error"
@@ -37,3 +38,8 @@ export type ReceiptUploadResponse = {
   errors?: ReceiptValidationError[]
   message?: string
 }
+
+export type UpdateReceiptFn = (
+  id: string,
+  data: Partial<SelectReceipt>
+) => Promise<ActionState<SelectReceipt>>

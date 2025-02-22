@@ -60,10 +60,8 @@ export async function getReceiptsAction(
 ): Promise<ActionState<SelectReceipt[]>> {
   try {
     const receipts = await db.query.receipts.findMany({
-      where: eq(receiptsTable.userId, userId),
-      orderBy: (receipts, { desc }) => [desc(receipts.date)]
+      where: eq(receiptsTable.userId, userId)
     })
-
     return {
       isSuccess: true,
       message: "Receipts retrieved successfully",
@@ -71,7 +69,7 @@ export async function getReceiptsAction(
     }
   } catch (error) {
     console.error("Error getting receipts:", error)
-    return { isSuccess: false, message: "Failed to retrieve receipts" }
+    return { isSuccess: false, message: "Failed to get receipts" }
   }
 }
 
@@ -107,53 +105,23 @@ export async function getReceiptByIdAction(
 }
 
 export async function updateReceiptAction(
-  receiptId: string,
-  updateData: Partial<InsertReceipt>
+  id: string,
+  data: Partial<SelectReceipt>
 ): Promise<ActionState<SelectReceipt>> {
   try {
-    const { userId } = await auth()
-    if (!userId) {
-      return { isSuccess: false, message: "User not authenticated" }
-    }
-
-    // Optimistic locking using updatedAt
-    const existingReceipt = await db.query.receipts.findFirst({
-      where: and(
-        eq(receiptsTable.id, receiptId),
-        eq(receiptsTable.userId, userId)
-      )
-    })
-
-    if (!existingReceipt) {
-      return { isSuccess: false, message: "Receipt not found" }
-    }
-
-    const [updatedReceipt] = await db
+    const [updated] = await db
       .update(receiptsTable)
-      .set({
-        ...updateData,
-        updatedAt: new Date()
-      })
-      .where(
-        and(
-          eq(receiptsTable.id, receiptId),
-          eq(receiptsTable.updatedAt, existingReceipt.updatedAt)
-        )
-      )
+      .set(data)
+      .where(eq(receiptsTable.id, id))
       .returning()
-
     return {
       isSuccess: true,
       message: "Receipt updated successfully",
-      data: updatedReceipt
+      data: updated
     }
   } catch (error) {
     console.error("Error updating receipt:", error)
-    return {
-      isSuccess: false,
-      message:
-        "Failed to update receipt. It may have been modified by another process."
-    }
+    return { isSuccess: false, message: "Failed to update receipt" }
   }
 }
 

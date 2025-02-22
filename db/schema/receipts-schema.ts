@@ -21,18 +21,19 @@ import {
   timestamp,
   uuid,
   decimal,
-  boolean
+  boolean,
+  numeric
 } from "drizzle-orm/pg-core"
-import { categoryEnum } from "./categories-schema"
+import { categoryEnum } from "@/db/schema"
 
 export const receiptsTable = pgTable("receipts", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: text("user_id").notNull(),
   originalFile: text("original_file").notNull(),
-  merchant: text("merchant"),
-  amount: decimal("amount", { precision: 10, scale: 2 }),
-  date: timestamp("date"),
-  category: categoryEnum("category"),
+  merchant: text("merchant").notNull(),
+  amount: numeric("amount").notNull(),
+  date: timestamp("date").notNull(),
+  category: categoryEnum("category").notNull(),
   isVerified: boolean("is_verified").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
