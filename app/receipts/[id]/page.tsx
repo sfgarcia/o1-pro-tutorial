@@ -11,12 +11,13 @@ import { Skeleton } from "@/components/ui/skeleton"
 export default async function ReceiptVerificationPage({
   params
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const { id } = await params
   const { userId } = await auth()
   if (!userId) redirect("/sign-in")
 
-  const { data: receipt } = await getReceiptByIdAction(params.id)
+  const { data: receipt } = await getReceiptByIdAction(id)
   if (!receipt || receipt.userId !== userId) notFound()
 
   const { data: signedUrl } = await generateSignedUrlStorage(

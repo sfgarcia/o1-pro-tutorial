@@ -24,7 +24,7 @@ import { ReceiptSchema, ReceiptData } from "@/lib/receipt-schema"
 import { ActionState } from "@/types"
 
 const MAX_RETRIES = 3
-const GPT_MODEL = "gpt-4-vision-preview"
+const GPT_MODEL = "gpt-4o-mini"
 
 type ProcessReceiptInput = {
   filePath: string

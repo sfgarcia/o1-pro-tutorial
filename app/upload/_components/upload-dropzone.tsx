@@ -42,11 +42,13 @@ export function UploadDropzone() {
           .from("receipts")
           .upload(filePath, file, {
             contentType: file.type,
-            upsert: false
+            upsert: false,
+            cacheControl: "3600"
           })
 
         if (error) throw error
 
+        // Process receipt
         const response = await fetch("/api/process-receipt", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -59,25 +61,14 @@ export function UploadDropzone() {
         window.location.href = `/receipts/${receiptId}`
       } catch (error) {
         console.error("Upload error:", error)
-        let errorMessage = "File upload failed"
-
-        if (error instanceof Error) {
-          errorMessage = error.message
-        } else if (typeof error === "object" && error !== null) {
-          // Handle Supabase errors
-          if ("message" in error) {
-            errorMessage = error.message as string
-          } else if ("error" in error) {
-            errorMessage = error.error as string
-          }
-        }
-
-        setUploadError(errorMessage)
+        setUploadError(
+          error instanceof Error ? error.message : "File upload failed"
+        )
       } finally {
         setIsUploading(false)
       }
     },
-    [userId, supabase]
+    [userId]
   )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
