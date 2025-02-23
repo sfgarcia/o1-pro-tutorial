@@ -20,8 +20,8 @@
 
 import { createClient } from "@supabase/supabase-js"
 import OpenAI from "openai"
-import { ReceiptSchema, ReceiptData } from "@/lib/receipt-schema"
 import { ActionState } from "@/types"
+import { createReceiptAction } from "@/db/actions/receipts-actions"
 
 const MAX_RETRIES = 3
 const GPT_MODEL = "gpt-4o-mini"
@@ -42,7 +42,7 @@ const openai = new OpenAI({
 
 export async function processReceiptAction(
   input: ProcessReceiptInput
-): Promise<ActionState<ReceiptData>> {
+): Promise<ActionState<any>> {
   try {
     // Download image from Supabase
     const { data: fileData, error: downloadError } = await supabase.storage
@@ -84,25 +84,29 @@ export async function processReceiptAction(
     const rawResponse = completion.choices[0].message.content
     const jsonString = rawResponse?.match(/\{[\s\S]*\}/)?.[0] || ""
     
-    try {
-      const parsedData = JSON.parse(jsonString)
-      const validatedData = ReceiptSchema.parse({
-        ...parsedData,
-        date: parsedData.date ? new Date(parsedData.date) : new Date()
-      })
+    // Parse JSON without validation
+    const parsedData = JSON.parse(jsonString)
 
-      return {
-        isSuccess: true,
-        message: "Receipt processed successfully",
-        data: validatedData
-      }
-    } catch (validationError) {
-      console.error("Validation failed:", validationError)
-      return {
-        isSuccess: false,
-        message: "AI returned invalid data format"
-      }
+    // Store the receipt in the database
+    const dbResult = await createReceiptAction({
+      originalFile: input.filePath,
+      merchant: parsedData.merchant || "Unknown",
+      amount: parseFloat(parsedData.amount).toFixed(2),
+      date: new Date(parsedData.date) || new Date(),
+      category: parsedData.category || "other",
+      userId: input.userId
+    })
+
+    if (!dbResult.isSuccess) {
+      throw new Error(dbResult.message)
     }
+
+    return {
+      isSuccess: true,
+      message: "Receipt processed and stored successfully",
+      data: dbResult.data
+    }
+    
   } catch (error) {
     console.error("Processing error:", error)
     return {

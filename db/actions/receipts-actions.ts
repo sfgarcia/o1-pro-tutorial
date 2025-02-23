@@ -38,17 +38,19 @@ export async function createReceiptAction(
       return { isSuccess: false, message: "User not authenticated" }
     }
 
-    // Log for debugging
-    console.log("Creating receipt with data:", { ...receiptData, userId })
-
     // Create new receipt with user ID from auth
     const [newReceipt] = await db
       .insert(receiptsTable)
-      .values({ ...receiptData, userId })
+      .values({
+        ...receiptData,
+        userId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
       .returning()
 
     // Log successful creation
-    console.log("Created receipt:", newReceipt)
+    console.log("Successfully created receipt:", newReceipt)
 
     return {
       isSuccess: true,
@@ -58,7 +60,10 @@ export async function createReceiptAction(
   } catch (error) {
     // Detailed error logging
     console.error("Error creating receipt:", error)
-    return { isSuccess: false, message: `Failed to create receipt: ${error}` }
+    return {
+      isSuccess: false,
+      message: `Failed to create receipt: ${error instanceof Error ? error.message : "Unknown error"}`
+    }
   }
 }
 
