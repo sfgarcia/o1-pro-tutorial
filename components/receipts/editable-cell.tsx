@@ -38,6 +38,22 @@ export function EditableCell({
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
+  // Función para formatear fechas de manera consistente
+  const formatDate = (date: Date) => {
+    if (!(date instanceof Date) || isNaN(date.getTime())) return "";
+    
+    // Usar formato ISO (YYYY-MM-DD) para consistencia entre servidor y cliente
+    return date.toISOString().split('T')[0];
+  }
+
+  // Función para mostrar fechas en la UI
+  const displayDate = (date: Date) => {
+    if (!(date instanceof Date) || isNaN(date.getTime())) return "";
+    
+    // Usar el formato ISO en-CA que siempre muestra YYYY-MM-DD
+    return date.toLocaleDateString('en-CA');
+  }
+
   const parseValue = (val: string) => {
     if (type === "number") return Number(val)
     if (type === "date") return new Date(val)
@@ -74,8 +90,9 @@ export function EditableCell({
         className="hover:bg-muted/50 flex min-h-[40px] cursor-pointer items-center p-2"
         onClick={() => setIsEditing(true)}
       >
-        {type === "date" && initialValue?.toLocaleDateString()}
-        {type !== "date" && initialValue}
+        {type === "date" && initialValue instanceof Date 
+          ? displayDate(initialValue)
+          : initialValue}
       </div>
     )
   }
@@ -84,7 +101,9 @@ export function EditableCell({
     <div className="relative">
       <Input
         value={
-          type === "date" ? inputValue?.toISOString().split("T")[0] : inputValue
+          type === "date" && inputValue instanceof Date
+            ? formatDate(inputValue)
+            : inputValue
         }
         onChange={e => setInputValue(parseValue(e.target.value))}
         onBlur={handleSave}
