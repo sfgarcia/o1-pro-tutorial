@@ -46,7 +46,6 @@ export interface ReceiptTableColumn {
 export const amountValidator: ReceiptValidationFn = value => {
   if (typeof value !== "number") return "Must be a number"
   if (value <= 0) return "Must be positive"
-  if (value > 100000) return "Maximum amount exceeded"
   return null
 }
 

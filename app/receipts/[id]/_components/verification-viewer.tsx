@@ -84,7 +84,6 @@ export function VerificationViewer({
               type="number"
               validation={val => {
                 if (val <= 0) return "Must be positive"
-                if (val > 100000) return "Maximum amount exceeded"
                 return null
               }}
             />

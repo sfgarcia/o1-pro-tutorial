@@ -57,8 +57,13 @@ export function UploadDropzone() {
 
         if (!response.ok) throw new Error("Processing failed")
 
-        const { receiptId } = await response.json()
-        window.location.href = `/receipts/${receiptId}`
+        const result = await response.json()
+        
+        if (result.isSuccess && result.data && result.data.id) {
+          window.location.href = `/receipts/${result.data.id}`
+        } else {
+          throw new Error("No se pudo obtener el ID del recibo")
+        }
       } catch (error) {
         console.error("Upload error:", error)
         setUploadError(

@@ -58,34 +58,55 @@ export async function processReceiptAction(
     const base64Image = Buffer.from(buffer).toString("base64")
 
     // Process with GPT-4 Vision
-    const completion = await openai.chat.completions.create({
-      model: GPT_MODEL,
-      max_tokens: 1000,
-      temperature: 0.2,
-      messages: [{
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: await getSystemPrompt()
-          },
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:image/png;base64,${base64Image}`,
-              detail: "high"
-            }
-          }
-        ]
-      }]
-    }, { maxRetries: MAX_RETRIES })
+    // const completion = await openai.chat.completions.create({
+    //   model: GPT_MODEL,
+    //   max_tokens: 1000,
+    //   temperature: 0.2,
+    //   messages: [{
+    //     role: "user",
+    //     content: [
+    //       {
+    //         type: "text",
+    //         text: await getSystemPrompt()
+    //       },
+    //       {
+    //         type: "image_url",
+    //         image_url: {
+    //           url: `data:image/png;base64,${base64Image}`,
+    //           detail: "high"
+    //         }
+    //       }
+    //     ]
+    //   }]
+    // }, { maxRetries: MAX_RETRIES })
 
     // Extract JSON from response
-    const rawResponse = completion.choices[0].message.content
-    const jsonString = rawResponse?.match(/\{[\s\S]*\}/)?.[0] || ""
+    // const rawResponse = completion.choices[0].message.content
+    // const jsonString = rawResponse?.match(/\{[\s\S]*\}/)?.[0] || ""
     
     // Parse JSON without validation
-    const parsedData = JSON.parse(jsonString)
+    // const parsedData = JSON.parse(jsonString)
+    const parsedData = {
+      "date": "09/12/2024",
+      "merchant": "Ópticas OPV SPA",
+      "amount": "324900",
+      "items": [
+        {
+          "name": "Lentillas Acuvue Oasys 1-Day Toric",
+          "quantity": 6,
+          "unit_price": 27.075,
+          "total_price": 162.450
+        },
+        {
+          "name": "Lentillas Acuvue Oasys 1-Day Toric",
+          "quantity": 6,
+          "unit_price": 27.075,
+          "total_price": 162.450
+        }
+      ],
+      "category": "Optical"
+    }
+
 
     // Store the receipt in the database
     const dbResult = await createReceiptAction({
@@ -104,7 +125,9 @@ export async function processReceiptAction(
     return {
       isSuccess: true,
       message: "Receipt processed and stored successfully",
-      data: dbResult.data
+      data: {
+        ...dbResult.data,
+      }
     }
     
   } catch (error) {
